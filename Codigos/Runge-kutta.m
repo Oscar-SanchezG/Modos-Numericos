@@ -1,0 +1,80 @@
+
+clc;
+dydt=@(t,y) y*x.^2-1.2*y; %introducir funcion
+a=0; %inicio de simulacion
+b=2; %fin de simulacion
+yinit=1; %conducion incial 
+n=100; %pasos totales;
+%elegir el metodo de Runge?utta para resolver
+metodo=1;
+%1 para un Runge?utta de cuarto orden
+%2 para un Runge?utta?ehlberg 45 o RKF45 con paso fijo
+%2 para un Runge?utta?ehlberg 45 o RKF45 con paso variable
+if metodo == 1 
+    dt=((b-a)/n);
+    x = 0:dt:10;                                         % Calculates upto y(3)
+    y = zeros(1,length(x)); 
+    y(1) = yinit;                                          % initial condition
+    for i=1:(length(x)-1)                              % calculation loop
+        k_1 = dydt(x(i),y(i));
+        k_2 = dydt(x(i)+0.5*dt,y(i)+0.5*dt*k_1);
+        k_3 = dydt((x(i)+0.5*dt),(y(i)+0.5*dt*k_2));
+        k_4 = dydt((x(i)+dt),(y(i)+k_3*dt));
+        y(i+1) = y(i) + (1/6)*(k_1+2*k_2+2*k_3+k_4)*dt;  % main equation
+    end
+    plot(x,y)
+end
+if metodo == 2
+    yinit=1; %conducion incial 
+    n=1000;
+    Y=yinit;
+    Yn = yinit;
+    T=a;
+    t = T(1);
+    dt=((b-a)/n);
+    for i=1:n
+         K1 = dt * dydt(t, Yn);
+         K2 = dt * dydt(t+dt/4,Yn+K1/4);
+         K3 = dt * dydt(t+3*dt/8, Yn+(3*K1/32) + (9*K2/32));
+         K4 = dt * dydt(t+12*dt/13,Yn+(1932*K1/2197)-(7200*K2/2197)+(7296*K3/2197));
+         K5 = dt * dydt(t+dt,Yn+(439*K1/216)-8*K2+(3680*K3/513)-(845*K4/4104));
+         K6 = dt * dydt(t+dt/2,Yn-(8*K1/27)+2*K2-(3544*K3/2565)+(1859*K4/4104)-(11*K5/40));
+         t = t + dt;
+         Yn = Yn + ((25 * K1 / 216) + (1408 * K3 / 2565) + (2197 * K4 / 4104) - (K5 / 5));
+         T = [T;t];
+         Y = [Y;Yn];
+    end
+    plot(T,Y)
+end
+if metodo == 3
+    trange=[a b];
+    tol = 1e-6;
+    dtmax = diff(trange)/10;
+    dt = dtmax;
+    Y = yinit; 
+    T = a;
+    Yn = yinit'; 
+    t = T(1);
+    stop = 0; 
+    while(~stop)
+         K1 = dt * dydt(t, Yn);
+         K2 = dt * dydt(t+dt/4,Yn+K1/4);
+         K3 = dt * dydt(t+3*dt/8, Yn+(3*K1/32) + (9*K2/32));
+         K4 = dt * dydt(t+12*dt/13,Yn+(1932*K1/2197)-(7200*K2/2197)+(7296*K3/2197));
+         K5 = dt * dydt(t+dt,Yn+(439*K1/216)-8*K2+(3680*K3/513)-(845*K4/4104));
+         K6 = dt * dydt(t+dt/2,Yn-(8*K1/27)+2*K2-(3544*K3/2565)+(1859*K4/4104)-(11*K5/40));
+         res =norm((K1/360)-(128*K3/4275)-(2197*K4/75240)+(K5/50)+(2*K6/55));
+         t = t + dt;
+         Yn = Yn + ((25 * K1 / 216) + (1408 * K3 / 2565) + (2197 * K4 / 4104) - (K5 / 5));
+         T = [T;t];
+         Y = [Y;Yn];
+         s=0.84 * (tol /res)^0.25;
+         dt=s*dt;
+         if (t >= trange(2)) 
+             stop = 1;
+         elseif(t+dt>trange(2))
+             dt = trange(2)-t;
+         end
+    end
+    plot(T,Y)
+end
